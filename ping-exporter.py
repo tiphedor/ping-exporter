@@ -5,7 +5,6 @@ import threading
 import sys
 import subprocess
 from urlparse import parse_qs, urlparse
-import logging
 import os
 
 def locate(file):
@@ -23,9 +22,6 @@ def ping(host, v6, interval, count, size):
     else:
         ping_command = '{} -4 -b {} -i 1 -p {} -q -c {} {}'.format(filepath, size, interval, count, host)
     output = []
-    #Log the actual ping command for debug purpose
-    if (not 'DISABLE_PING_LOG' in os.environ):
-        logger.info(ping_command)
     #Execute the ping
     cmd_output = subprocess.Popen(ping_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
     #Parse the fping output
@@ -51,6 +47,8 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
 class GetHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        return
     def do_GET(self):
         #Parse the url
         parsed_path = urlparse(self.path).query
@@ -89,17 +87,11 @@ if __name__ == '__main__':
     #Locate the path of fping
     global filepath
     filepath = locate("fping")
-    logger = logging.getLogger()
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
     #Check if there is a special port configured
     if len(sys.argv) >= 3:
         port = int(sys.argv[2])
     else:
         port = 8085
-	logger.info('Starting server port {}, use <Ctrl-C> to stop'.format(port))
+	print('Starting server port {}, use <Ctrl-C> to stop'.format(port))
     server = ThreadedHTTPServer(('0.0.0.0', port), GetHandler)
     server.serve_forever()
