@@ -24,7 +24,8 @@ def ping(host, v6, interval, count, size):
         ping_command = '{} -4 -b {} -i 1 -p {} -q -c {} {}'.format(filepath, size, interval, count, host)
     output = []
     #Log the actual ping command for debug purpose
-    logger.info(ping_command)
+    if (not 'DISABLE_PING_LOG' in os.environ):
+        logger.info(ping_command)
     #Execute the ping
     cmd_output = subprocess.Popen(ping_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
     #Parse the fping output
@@ -99,6 +100,6 @@ if __name__ == '__main__':
         port = int(sys.argv[2])
     else:
         port = 8085
-    logger.info('Starting server port {}, use <Ctrl-C> to stop'.format(port))
+	logger.info('Starting server port {}, use <Ctrl-C> to stop'.format(port))
     server = ThreadedHTTPServer(('0.0.0.0', port), GetHandler)
     server.serve_forever()
